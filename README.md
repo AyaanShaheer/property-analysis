@@ -4,6 +4,9 @@
 
 A robust and intelligent platform for analyzing **industrial properties** and discovering **comparable assets** across **Cook County**, **Dallas County**, and **Los Angeles County**.
 
+<img width="1917" height="977" alt="Screenshot 2025-07-12 230947" src="https://github.com/user-attachments/assets/b4fa1ed9-d875-4d3d-a243-769c85283aa2" />
+
+
 ---
 
 ## 🚀 Key Features
