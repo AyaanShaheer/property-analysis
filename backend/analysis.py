@@ -117,41 +117,209 @@ class MockCountyAPI:
 
     def _generate_mock_data(self) -> List[Dict]:
         np.random.seed(42)
+        
+        # Real industrial areas and their coordinates for each county
+        county_industrial_areas = {
+            'Cook County': [
+                ('Elk Grove Village', [
+                    ('Devon', 'Ave'), ('Busse', 'Rd'), ('Elmhurst', 'Rd'),
+                    ('Oakton', 'St'), ('Nicholas', 'Blvd'), ('Lively', 'Blvd')
+                ]),
+                ('Bedford Park', [
+                    ('State', 'Rd'), ('Central', 'Ave'), ('Archer', 'Ave'),
+                    ('Cicero', 'Ave'), ('Harlem', 'Ave'), ('65th', 'St')
+                ])
+            ],
+            'Dallas County': [
+                ('South Stemmons', [
+                    ('Mockingbird', 'Ln'), ('Empire Central', 'Dr'), ('Regal Row', 'Rd'),
+                    ('Stemmons', 'Fwy'), ('Market Center', 'Blvd'), ('Manufacturing', 'St')
+                ]),
+                ('West Dallas', [
+                    ('Singleton', 'Blvd'), ('Commerce', 'St'), ('Industrial', 'Blvd'),
+                    ('Irving', 'Blvd'), ('Conveyor', 'Ln'), ('Distribution', 'Dr')
+                ])
+            ],
+            'Los Angeles County': [
+                ('Vernon', [
+                    ('Alameda', 'St'), ('Soto', 'St'), ('Pacific', 'Blvd'),
+                    ('Washington', 'Blvd'), ('Santa Fe', 'Ave'), ('District', 'Blvd')
+                ]),
+                ('City of Industry', [
+                    ('Valley', 'Blvd'), ('Gale', 'Ave'), ('Azusa', 'Ave'),
+                    ('Baldwin Park', 'Blvd'), ('Industry Hills', 'Pkwy'), ('Nelson', 'Ave')
+                ])
+            ]
+        }
+
+        # Base coordinates for each county
         county_coords = {
             'Cook County': (41.8781, -87.6298),
             'Dallas County': (32.7767, -96.7970),
             'Los Angeles County': (34.0522, -118.2437)
         }
+
+        # Building sizes by county (sq ft)
+        building_sizes = {
+            'Cook County': (25000, 250000),
+            'Dallas County': (30000, 300000),
+            'Los Angeles County': (20000, 200000)
+        }
+
+        # Zoning codes by county
+        zoning_by_county = {
+            'Cook County': ['M1', 'M2', 'I1', 'I2'],
+            'Dallas County': ['IR', 'IM', 'IL'],
+            'Los Angeles County': ['M1', 'M2', 'MR1', 'MR2']
+        }
+        
         base_lat, base_lon = county_coords.get(self.county_name, (40.0, -100.0))
         properties = []
-        industrial_zones = ['M1', 'M2', 'I-1', 'I-2', 'IM', 'IL']
+        
+        # Get areas for this county
+        county_areas = county_industrial_areas.get(self.county_name, [])
+        
         for i in range(100):
-            lat_offset = np.random.uniform(-0.5, 0.5)
-            lon_offset = np.random.uniform(-0.5, 0.5)
+            # Randomly select an area and its streets
+            area_index = np.random.randint(0, len(county_areas))
+            area, streets = county_areas[area_index]
+            
+            # Randomly select a street
+            street_index = np.random.randint(0, len(streets))
+            street_name, street_type = streets[street_index]
+            
+            # Generate realistic lat/lon offset
+            lat_offset = np.random.uniform(-0.1, 0.1)
+            lon_offset = np.random.uniform(-0.1, 0.1)
+            
+            # Generate building area using log-normal distribution
+            min_size, max_size = building_sizes[self.county_name]
+            building_area = np.random.lognormal(mean=np.log((min_size + max_size)/2), sigma=0.5)
+            building_area = max(min_size, min(max_size, building_area))
+            
+            # Generate lot size (typically 2-4x building size)
+            lot_size = building_area * np.random.uniform(2, 4)
+            
+            # Calculate assessed value based on location and size
+            base_price_per_sqft = {
+                'Cook County': np.random.uniform(80, 150),
+                'Dallas County': np.random.uniform(60, 120),
+                'Los Angeles County': np.random.uniform(100, 200)
+            }[self.county_name]
+            assessed_value = building_area * base_price_per_sqft * np.random.uniform(0.9, 1.1)
+            
             property_data = {
                 'property_id': f"{self.county_name[:2].upper()}{i:04d}",
-                'address': f"{np.random.randint(100, 9999)} Industrial Blvd",
-                'city': self.county_name.split()[0],
+                'address': f"{np.random.randint(100, 9999)} {street_name} {street_type}",
+                'city': area,
                 'county': self.county_name,
                 'state': {'Cook County': 'IL', 'Dallas County': 'TX', 'Los Angeles County': 'CA'}[self.county_name],
-                'zip_code': f"{np.random.randint(10000, 99999)}",
+                'zip_code': self._generate_zip_code(self.county_name, area),
                 'latitude': base_lat + lat_offset,
                 'longitude': base_lon + lon_offset,
-                'building_area': np.random.uniform(10000, 500000),
-                'lot_size': np.random.uniform(20000, 1000000),
-                'year_built': np.random.randint(1950, 2023),
-                'zoning': np.random.choice(industrial_zones),
+                'building_area': building_area,
+                'lot_size': lot_size,
+                'year_built': self._generate_year_built(),
+                'zoning': np.random.choice(zoning_by_county[self.county_name]),
                 'property_type': 'Industrial',
-                'assessed_value': np.random.uniform(500000, 50000000)
+                'assessed_value': assessed_value
             }
             properties.append(property_data)
+        
         return properties
 
+    def _generate_zip_code(self, county: str, area: str) -> str:
+        """Generate realistic ZIP codes for each area"""
+        zip_ranges = {
+            'Cook County': {
+                'Elk Grove Village': range(60007, 60009),
+                'Bedford Park': range(60501, 60503)
+            },
+            'Dallas County': {
+                'South Stemmons': range(75207, 75209),
+                'West Dallas': range(75212, 75214)
+            },
+            'Los Angeles County': {
+                'Vernon': range(90058, 90060),
+                'City of Industry': range(91745, 91747)
+            }
+        }
+        return str(np.random.choice(list(zip_ranges[county][area])))
+
+    def _generate_year_built(self) -> int:
+        """Generate realistic construction years with distribution favoring certain periods"""
+        periods = [
+            (1960, 1979, 0.3),  # 30% chance of older buildings
+            (1980, 1999, 0.4),  # 40% chance of middle-age buildings
+            (2000, 2023, 0.3)   # 30% chance of newer buildings
+        ]
+        
+        period = np.random.choice(len(periods), p=[p[2] for p in periods])
+        start_year, end_year, _ = periods[period]
+        return np.random.randint(start_year, end_year + 1)
+
     def get_properties(self, filters: Dict = None) -> List[Dict]:
+        """Get properties with optional filters"""
         filtered_properties = self.properties.copy()
+        
         if filters:
             if 'zoning' in filters:
                 filtered_properties = [p for p in filtered_properties if p['zoning'] in filters['zoning']]
+            if 'min_building_area' in filters:
+                filtered_properties = [p for p in filtered_properties if p['building_area'] >= filters['min_building_area']]
+            if 'max_building_area' in filters:
+                filtered_properties = [p for p in filtered_properties if p['building_area'] <= filters['max_building_area']]
+            if 'city' in filters:
+                filtered_properties = [p for p in filtered_properties if p['city'] == filters['city']]
+                
+        return filtered_properties
+
+
+    def _generate_zip_code(self, county: str, area: str) -> str:
+        """Generate realistic ZIP codes for each area"""
+        zip_ranges = {
+            'Cook County': {
+                'Elk Grove Village': range(60007, 60009),
+                'Bedford Park': range(60501, 60503)
+            },
+            'Dallas County': {
+                'South Stemmons': range(75207, 75209),
+                'West Dallas': range(75212, 75214)
+            },
+            'Los Angeles County': {
+                'Vernon': range(90058, 90060),
+                'City of Industry': range(91745, 91747)
+            }
+        }
+        return str(np.random.choice(list(zip_ranges[county][area])))
+
+    def _generate_year_built(self) -> int:
+        """Generate realistic construction years with distribution favoring certain periods"""
+        # Industrial development periods: 1960s-1970s, 1980s-1990s, 2000s-present
+        periods = [
+            (1960, 1979, 0.3),  # 30% chance of older buildings
+            (1980, 1999, 0.4),  # 40% chance of middle-age buildings
+            (2000, 2023, 0.3)   # 30% chance of newer buildings
+        ]
+        
+        period = np.random.choice(len(periods), p=[p[2] for p in periods])
+        start_year, end_year, _ = periods[period]
+        return np.random.randint(start_year, end_year + 1)
+
+    def get_properties(self, filters: Dict = None) -> List[Dict]:
+        """Get properties with optional filters"""
+        filtered_properties = self.properties.copy()
+        
+        if filters:
+            if 'zoning' in filters:
+                filtered_properties = [p for p in filtered_properties if p['zoning'] in filters['zoning']]
+            if 'min_building_area' in filters:
+                filtered_properties = [p for p in filtered_properties if p['building_area'] >= filters['min_building_area']]
+            if 'max_building_area' in filters:
+                filtered_properties = [p for p in filtered_properties if p['building_area'] <= filters['max_building_area']]
+            if 'city' in filters:
+                filtered_properties = [p for p in filtered_properties if p['city'] == filters['city']]
+                
         return filtered_properties
 
 class DataExtractionAgent:
