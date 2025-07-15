@@ -7,7 +7,6 @@ import os
 import sys
 
 # Import our property analysis system
-# (The PropertyAnalysisSystem code from the previous artifact would be in a separate file)
 from analysis import PropertyAnalysisSystem, PropertyData
 
 # Configure logging
@@ -99,7 +98,8 @@ def get_property(property_id):
                 'property_type': property_data.property_type,
                 'assessed_value': property_data.assessed_value,
                 'sale_price': property_data.sale_price,
-                'sale_date': property_data.sale_date
+                'sale_date': property_data.sale_date,
+                'last_sale_amount': property_data.last_sale_amount  # <-- NEW
             }
         })
         

@@ -286,6 +286,11 @@ export default function Home() {
                     <p className="text-sm text-gray-600 mt-1">
                       {formatCurrency(property.assessed_value)}
                     </p>
+                    {property.last_sale_amount && (
+                      <p className="text-sm text-gray-600 mt-1">
+                        Last Sale: {formatCurrency(property.last_sale_amount)}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
@@ -316,6 +321,12 @@ export default function Home() {
                       <p className="text-sm text-gray-600">Assessed Value</p>
                       <p className="font-medium">{formatCurrency(comparables.target_property.assessed_value)}</p>
                     </div>
+                    {comparables.target_property.last_sale_amount && (
+                      <div>
+                        <p className="text-sm text-gray-600">Last Sale</p>
+                        <p className="font-medium">{formatCurrency(comparables.target_property.last_sale_amount)}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -364,7 +375,7 @@ export default function Home() {
                             </p>
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                           <div>
                             <p className="text-gray-600">Building Area</p>
                             <p className="font-medium">{formatNumber(comp.building_area)} sq ft</p>
@@ -381,6 +392,12 @@ export default function Home() {
                             <p className="text-gray-600">$/sq ft</p>
                             <p className="font-medium">${(comp.assessed_value / comp.building_area).toFixed(2)}</p>
                           </div>
+                          {comp.last_sale_amount && (
+                            <div>
+                              <p className="text-gray-600">Last Sale</p>
+                              <p className="font-medium">{formatCurrency(comp.last_sale_amount)}</p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
